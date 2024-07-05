@@ -116,10 +116,16 @@ const initialRecetas = [
 function App() {
 	const [selectedRecipe, setSelectedRecipe] = useState(null);
 	const [ingredientes, setIngredientes] = useState(initialIngredients);
+	const [seleccion, setSeleccion] = useState([]);
 
 	function handleSelectedRecipe(receta) {
 		console.log(receta);
+		console.log(receta.ingredients);
 		setSelectedRecipe(receta);
+		setSeleccion((seleccionado) => [
+			...seleccionado,
+			...receta.ingredients,
+		]);
 	}
 
 	return (
@@ -130,7 +136,9 @@ function App() {
 					<Sidebar onSelectedRecipe={handleSelectedRecipe} />
 				</div>
 				<div className="col-span-3 p-3 rounded-md bg-violet-200">
-					<Receta
+					<RecetaContainer
+						seleccion={seleccion}
+						onSetSeleccion={setSeleccion}
 						selectedRecipe={selectedRecipe}
 						ingredientes={ingredientes}
 					/>
@@ -294,7 +302,7 @@ function NuevaReceta({ setAgregarReceta, onNuevaReceta }) {
 	);
 }
 
-function Recipe({ receta, removeReceta, onSelectedRecipe }) {
+function RecipeContainer({ receta, removeReceta, onSelectedRecipe }) {
 	function handleRemoveReceta() {
 		removeReceta(receta.id);
 	}
@@ -343,7 +351,7 @@ function RecipeList({ recetas, removeReceta, onSelectedRecipe }) {
 	return (
 		<ul className="flex flex-col gap-2">
 			{recetas.map((receta) => (
-				<Recipe
+				<RecipeContainer
 					receta={receta}
 					key={receta.id}
 					removeReceta={removeReceta}
@@ -354,15 +362,21 @@ function RecipeList({ recetas, removeReceta, onSelectedRecipe }) {
 	);
 }
 
-function Receta({ selectedRecipe, ingredientes }) {
-	const [seleccion, setSeleccion] = useState([]);
+function RecetaContainer({
+	selectedRecipe,
+	ingredientes,
+	seleccion,
+	onSetSeleccion,
+}) {
+	console.log("selected " + selectedRecipe);
+	console.log("seleccion " + seleccion);
 
 	function handleSeleccion(seleccionado) {
-		setSeleccion((seleccion) => [...seleccion, seleccionado]);
+		onSetSeleccion((seleccion) => [...seleccion, seleccionado]);
 	}
 
 	function handleRemoveSelected(borrado) {
-		setSeleccion(seleccion.filter((sel) => sel.id !== borrado));
+		onSetSeleccion(seleccion.filter((sel) => sel.id !== borrado));
 	}
 
 	return (
@@ -577,19 +591,10 @@ function FormaReceta({ ingredientes, onSeleccion }) {
 	);
 }
 
-function IngredientesContainer({
-	seleccion,
-	onRemoveSelected,
-	selectedRecipe,
-}) {
-	// console.log(selectedRecipe?.ingredients);
-	// console.log(seleccion);
-	const totalIngredients = [...seleccion, ...selectedRecipe?.ingredients];
-	console.log(totalIngredients);
-
+function IngredientesContainer({ seleccion, onRemoveSelected }) {
 	return (
 		<div>
-			{seleccion.length > 0 || selectedRecipe ? (
+			{seleccion.length ? (
 				<>
 					<h2 className="mb-2 text-xl font-bold text-violet-950">
 						Ingredientes
