@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import "./App.css";
 
 const initialIngredients = [
@@ -115,14 +116,18 @@ const initialRecetas = [
 
 function App() {
 	const [selectedRecipe, setSelectedRecipe] = useState(null);
-	const [ingredientes, setIngredientes] = useState(initialIngredients);
-	const [seleccion, setSeleccion] = useState([]);
+	const [ingredientesActivos, setIngredientesActivos] =
+		useState(initialIngredients);
+	const [ingredienteAgregado, setIngredienteAgregado] = useState([]);
 
 	function handleSelectedRecipe(receta) {
-		console.log(receta);
-		console.log(receta.ingredients);
+		setSelectedRecipe(null);
+		setIngredienteAgregado([]);
+
 		setSelectedRecipe(receta);
-		setSeleccion((seleccionado) => [
+		if (!receta.ingredients) return;
+
+		setIngredienteAgregado((seleccionado) => [
 			...seleccionado,
 			...receta.ingredients,
 		]);
@@ -137,16 +142,16 @@ function App() {
 				</div>
 				<div className="col-span-3 p-3 rounded-md bg-violet-200">
 					<RecetaContainer
-						seleccion={seleccion}
-						onSetSeleccion={setSeleccion}
+						ingredienteAgregado={ingredienteAgregado}
+						onSetIngredienteAgreagado={setIngredienteAgregado}
 						selectedRecipe={selectedRecipe}
-						ingredientes={ingredientes}
+						ingredientesActivos={ingredientesActivos}
 					/>
 				</div>
 			</div>
 			<AgregaIngredientes
-				ingredientes={ingredientes}
-				onSetIngredientes={setIngredientes}
+				ingredientesActivos={ingredientesActivos}
+				onSetIngredientesActivos={setIngredientesActivos}
 			/>
 		</div>
 	);
@@ -338,7 +343,7 @@ function RecipeContainer({ receta, removeReceta, onSelectedRecipe }) {
 							className="text-sm"
 							title="Borrar receta"
 						>
-							<span>❌</span>
+							<span>🗑</span>
 						</button>
 					</div>
 				</div>
@@ -364,19 +369,30 @@ function RecipeList({ recetas, removeReceta, onSelectedRecipe }) {
 
 function RecetaContainer({
 	selectedRecipe,
-	ingredientes,
-	seleccion,
-	onSetSeleccion,
+	ingredientesActivos,
+	ingredienteAgregado,
+	onSetIngredienteAgreagado,
 }) {
-	console.log("selected " + selectedRecipe);
-	console.log("seleccion " + seleccion);
-
 	function handleSeleccion(seleccionado) {
-		onSetSeleccion((seleccion) => [...seleccion, seleccionado]);
+		onSetIngredienteAgreagado((seleccion) => [...seleccion, seleccionado]);
 	}
 
 	function handleRemoveSelected(borrado) {
-		onSetSeleccion(seleccion.filter((sel) => sel.id !== borrado));
+		onSetIngredienteAgreagado(
+			ingredienteAgregado.filter((sel) => sel.id !== borrado)
+		);
+	}
+
+	console.log(ingredientesActivos);
+
+	console.log(
+		ingredientesActivos.map((ingrediente) => [
+			ingrediente.name,
+			ingrediente.cost,
+		])
+	);
+	function calculator(ingredientesActivos) {
+		if (!ingredientesActivos) return;
 	}
 
 	return (
@@ -385,20 +401,29 @@ function RecetaContainer({
 
 			<div className="grid h-full grid-cols-1 gap-6 p-3 mt-4 bg-white rounded-md md:grid-cols-2">
 				<IngredientesContainer
-					seleccion={seleccion}
+					ingredienteAgregado={ingredienteAgregado}
 					onRemoveSelected={handleRemoveSelected}
 					selectedRecipe={selectedRecipe}
 				/>
 				<div className="prose">
-					<h2 className="mb-2 text-xl font-bold text-violet-950">
-						Descripción
-					</h2>
-					<p className="text-violet-900">uno</p>
+					{selectedRecipe && (
+						<>
+							<div className="inline-flex items-baseline justify-between w-full gap-4">
+								<h2 className="mb-2 text-xl font-bold text-violet-950 line-clamp-1">
+									Instrucciones
+								</h2>
+								<button title="edit">✏️</button>
+							</div>
+							<div className="prose text-violet-900">
+								<p>{selectedRecipe.instructions}</p>
+							</div>
+						</>
+					)}
 				</div>
 			</div>
 
 			<FormaReceta
-				ingredientes={ingredientes}
+				ingredientesActivos={ingredientesActivos}
 				onSeleccion={handleSeleccion}
 			/>
 		</div>
@@ -487,7 +512,7 @@ function Button({ children, size, color, width, onClick }) {
 	);
 }
 
-function FormaReceta({ ingredientes, onSeleccion }) {
+function FormaReceta({ ingredientesActivos, onSeleccion }) {
 	const [ingrediente, setIngrediente] = useState("");
 	const [cantidad, setCantidad] = useState(0);
 	const [medida, setMedida] = useState("gr");
@@ -499,7 +524,9 @@ function FormaReceta({ ingredientes, onSeleccion }) {
 			return;
 		}
 
-		const seleccion = ingredientes.filter((ing) => ing.id === ingrediente);
+		const seleccion = ingredientesActivos.filter(
+			(ing) => ing.id === ingrediente
+		);
 
 		const id = crypto.randomUUID();
 
@@ -527,7 +554,7 @@ function FormaReceta({ ingredientes, onSeleccion }) {
 					<label className="text-sm text-violet-800">
 						Ingrediente
 					</label>
-					{ingredientes.length > 0 ? (
+					{ingredientesActivos.length > 0 ? (
 						<select
 							value={ingrediente}
 							onChange={(e) =>
@@ -536,7 +563,7 @@ function FormaReceta({ ingredientes, onSeleccion }) {
 							className="w-full px-3 py-[10px] rounded-lg text-violet-950"
 						>
 							<option value="">Seleccionar Ingrediente</option>
-							{ingredientes.map((ingrediente, index) => (
+							{ingredientesActivos.map((ingrediente, index) => (
 								<option key={index} value={ingrediente.id}>
 									{ingrediente.name}
 								</option>
@@ -591,18 +618,22 @@ function FormaReceta({ ingredientes, onSeleccion }) {
 	);
 }
 
-function IngredientesContainer({ seleccion, onRemoveSelected }) {
+function IngredientesContainer({
+	ingredienteAgregado,
+	onRemoveSelected,
+	selectedRecipe,
+}) {
 	return (
 		<div>
-			{seleccion.length ? (
+			{ingredienteAgregado.length ? (
 				<>
 					<h2 className="mb-2 text-xl font-bold text-violet-950">
-						Ingredientes
+						Ingredientes {selectedRecipe?.name}
 					</h2>
 					<div className="flex flex-col gap-1">
-						{seleccion.map((item, index) => (
+						{ingredienteAgregado.map((ingredienteNuevo, index) => (
 							<IngredienteReceta
-								item={item}
+								ingredienteNuevo={ingredienteNuevo}
 								key={index}
 								onRemoveSelected={onRemoveSelected}
 							/>
@@ -624,23 +655,23 @@ function IngredientesContainer({ seleccion, onRemoveSelected }) {
 	);
 }
 
-function IngredienteReceta({ item, onRemoveSelected }) {
+function IngredienteReceta({ ingredienteNuevo, onRemoveSelected }) {
 	function handleRemove(e) {
 		e.preventDefault();
-		onRemoveSelected(item.id);
+		onRemoveSelected(ingredienteNuevo.id);
 	}
 
 	return (
 		<>
-			{item && (
+			{ingredienteNuevo && (
 				<div className="flex items-center justify-between gap-5 p-2 rounded-md bg-violet-50">
 					<div>
 						<h3 className="text-lg text-violet-900">
-							{item?.quantity}
-							{item?.unit}
+							{ingredienteNuevo?.quantity}
+							{ingredienteNuevo?.unit}
 							<span className="text-lg font-normal text-violet-700">
 								{" "}
-								{item?.name}
+								{ingredienteNuevo?.name}
 							</span>
 						</h3>
 					</div>
@@ -656,10 +687,12 @@ function IngredienteReceta({ item, onRemoveSelected }) {
 	);
 }
 
-function AgregaIngredientes({ ingredientes, onSetIngredientes }) {
-	function handleSetIngredientes(ingrediente) {
-		// console.log(ingrediente);
-		onSetIngredientes((ingredientes) => [...ingredientes, ingrediente]);
+function AgregaIngredientes({ ingredientesActivos, onSetIngredientesActivos }) {
+	function handleSetIngredientesActivos(nuevoIngrediente) {
+		onSetIngredientesActivos((ingredientesActivos) => [
+			...ingredientesActivos,
+			nuevoIngrediente,
+		]);
 	}
 
 	return (
@@ -668,14 +701,18 @@ function AgregaIngredientes({ ingredientes, onSetIngredientes }) {
 				<h2 className="mb-4 text-3xl font-bold text-center">
 					🥚 Costos por ingrediente 🥚
 				</h2>
-				<ListaIngredientesCostos ingredientes={ingredientes} />
+				<ListaIngredientesCostos
+					ingredientesActivos={ingredientesActivos}
+				/>
 			</div>
-			<FormaIngredientes onSetIngredientes={handleSetIngredientes} />
+			<FormaIngredientes
+				onSetIngredientesActivos={handleSetIngredientesActivos}
+			/>
 		</div>
 	);
 }
 
-function ListaIngredientesCostos({ ingredientes }) {
+function ListaIngredientesCostos({ ingredientesActivos }) {
 	return (
 		<table className="w-full border border-collapse border-pink-200 shadow-sm table-auto">
 			<thead className="bg-pink-200">
@@ -686,7 +723,7 @@ function ListaIngredientesCostos({ ingredientes }) {
 				</tr>
 			</thead>
 			<tbody>
-				{ingredientes.map((ingrediente) => (
+				{ingredientesActivos.map((ingrediente) => (
 					<IngredienteCosto
 						ingrediente={ingrediente}
 						key={ingrediente.id}
