@@ -1,35 +1,61 @@
 import { useState } from "react";
-import { useEffect } from "react";
 import "./App.css";
+
+const medidas = [
+	{
+		name: "gr",
+		value: "gr",
+	},
+	{
+		name: "mg",
+		value: "mg",
+	},
+	{
+		name: "kg",
+		value: "kg",
+	},
+	{
+		name: "ml",
+		value: "ml",
+	},
+	{
+		name: "lt",
+		value: "lt",
+	},
+	{
+		name: "pza",
+		value: "pza",
+	},
+];
 
 const initialIngredients = [
 	{
 		id: 1,
 		name: "Huevo",
-		quantity: 1,
-		unit: "kg",
-		cost: 10,
+		quantity: 24,
+		unit: "pza",
+		cost: 64,
 	},
 	{
 		id: 2,
 		name: "Harina",
 		quantity: 1,
 		unit: "kg",
-		cost: 8,
+		cost: 22,
 	},
 	{
 		id: 3,
 		name: "Azúcar",
 		quantity: 1,
 		unit: "kg",
-		cost: 12,
+		cost: 45,
 	},
 	{
 		id: 4,
 		name: "Mantequilla",
 		quantity: 300,
 		unit: "gr",
-		cost: 9,
+		cost: 46,
 	},
 ];
 
@@ -119,6 +145,20 @@ function App() {
 	const [ingredientesActivos, setIngredientesActivos] =
 		useState(initialIngredients);
 	const [ingredienteAgregado, setIngredienteAgregado] = useState([]);
+	const [recetasIniciales, setRecetasIniciales] = useState(initialRecetas);
+
+	function handleAddReceta(receta) {
+		setRecetasIniciales((recetasIniciales) => [
+			...recetasIniciales,
+			receta,
+		]);
+	}
+
+	function handleBorrarReceta(recetaBorrarId) {
+		setRecetasIniciales((recetas) =>
+			recetas.filter((receta) => receta.id !== recetaBorrarId)
+		);
+	}
 
 	function handleSelectedRecipe(receta) {
 		setSelectedRecipe(null);
@@ -133,12 +173,22 @@ function App() {
 		]);
 	}
 
+	function handleOnSaveHeader(receta) {
+		setSelectedRecipe(receta);
+	}
+
 	return (
 		<div className="px-5 mx-auto mb-8 max-w-screen-2xl">
 			<Logo />
 			<div className="grid w-full grid-cols-4 gap-8 mx-auto min-h-[50vh]">
 				<div className="flex flex-col justify-between col-span-1 gap-5 p-3 rounded-md bg-slate-100">
-					<Sidebar onSelectedRecipe={handleSelectedRecipe} />
+					<Sidebar
+						onSelectedRecipe={handleSelectedRecipe}
+						recetasIniciales={recetasIniciales}
+						onSetRecetas={handleAddReceta}
+						onBorrarReceta={handleBorrarReceta}
+						selectedRecipe={selectedRecipe}
+					/>
 				</div>
 				<div className="col-span-3 p-3 rounded-md bg-violet-200">
 					<RecetaContainer
@@ -146,6 +196,7 @@ function App() {
 						onSetIngredienteAgreagado={setIngredienteAgregado}
 						selectedRecipe={selectedRecipe}
 						ingredientesActivos={ingredientesActivos}
+						onHeaderSave={handleOnSaveHeader}
 					/>
 				</div>
 			</div>
@@ -163,24 +214,29 @@ function Logo() {
 	return (
 		<>
 			<div className="my-6 text-center">
-				<h1 className="font-sans text-6xl font-bold ">🍩 Recetas 🍪</h1>
+				<h1 className="font-sans text-6xl font-bold ">
+					🍩 Pasteleríap 🍪
+				</h1>
 			</div>
 		</>
 	);
 }
 
-function Sidebar({ onSelectedRecipe }) {
+function Sidebar({
+	onSelectedRecipe,
+	recetasIniciales,
+	onSetRecetas,
+	onBorrarReceta,
+	selectedRecipe,
+}) {
 	const [agregarReceta, setAgregarReceta] = useState(false);
-	const [recetas, setRecetas] = useState(initialRecetas);
 
-	function handleAddReceta(receta) {
-		setRecetas((recetas) => [...recetas, receta]);
+	function onHandleRecetas(receta) {
+		onSetRecetas(receta);
 	}
 
-	function borrarReceta(recetaBorrarId) {
-		setRecetas((recetas) =>
-			recetas.filter((receta) => receta.id !== recetaBorrarId)
-		);
+	function handleBorrarReceta(recetaBorrarId) {
+		onBorrarReceta(recetaBorrarId);
 	}
 
 	function handleAgregarReceta() {
@@ -189,14 +245,17 @@ function Sidebar({ onSelectedRecipe }) {
 	return (
 		<>
 			<div className="p-3 bg-white rounded-md">
-				<h3 className="mb-2 font-sans text-lg font-bold">
-					{recetas.length > 0 ? "Recetas" : "Agrega tus recetas 👇"}
+				<h3 className="mb-2 font-sans text-lg font-bold text-slate-950">
+					{recetasIniciales.length > 0
+						? "Recetas"
+						: "Agrega tus recetas 👇"}
 				</h3>
 				<div className="flex flex-col gap-2">
 					<RecipeList
-						recetas={recetas}
-						removeReceta={borrarReceta}
+						recetasIniciales={recetasIniciales}
+						removeReceta={handleBorrarReceta}
 						onSelectedRecipe={onSelectedRecipe}
+						selectedRecipe={selectedRecipe}
 					/>
 				</div>
 			</div>
@@ -204,7 +263,7 @@ function Sidebar({ onSelectedRecipe }) {
 				{agregarReceta && (
 					<NuevaReceta
 						setAgregarReceta={setAgregarReceta}
-						onNuevaReceta={handleAddReceta}
+						onNuevaReceta={onHandleRecetas}
 					/>
 				)}
 				{!agregarReceta && (
@@ -267,8 +326,8 @@ function NuevaReceta({ setAgregarReceta, onNuevaReceta }) {
 				Close
 			</Button>
 
-			<div className="p-4 mt-4 rounded-md bg-slate-300">
-				<h3 className="mb-2 font-sans text-xl font-bold">
+			<div className="p-4 mt-4 rounded-md bg-cyan-200">
+				<h3 className="mb-2 font-sans text-xl font-bold text-cyan-950">
 					Nueva Receta
 				</h3>
 				<form
@@ -280,22 +339,22 @@ function NuevaReceta({ setAgregarReceta, onNuevaReceta }) {
 						placeholder="Nombre"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
-						className="w-full px-3 py-2 rounded-lg"
+						className="w-full px-3 py-2 rounded-lg text-cyan-950"
 					/>
 					<textarea
 						placeholder="Descripción"
 						value={description}
 						onChange={(e) => setDescription(e.target.value)}
-						className="w-full px-3 py-2 rounded-lg"
+						className="w-full px-3 py-2 rounded-lg text-cyan-950"
 					/>
 					<input
 						tupe="text"
 						value={image}
 						onChange={(e) => setImage(e.target.value)}
-						className="w-full px-3 py-2 rounded-lg"
+						className="w-full px-3 py-2 rounded-lg text-cyan-950"
 					/>
 					<Button
-						color={"bg-cyan-500 hover:bg-cyan-600 text-slate-900"}
+						color={"bg-cyan-700 hover:bg-cyan-800 text-white"}
 						size={"big"}
 						width={"full"}
 					>
@@ -307,7 +366,12 @@ function NuevaReceta({ setAgregarReceta, onNuevaReceta }) {
 	);
 }
 
-function RecipeContainer({ receta, removeReceta, onSelectedRecipe }) {
+function RecipeContainer({
+	receta,
+	removeReceta,
+	onSelectedRecipe,
+	selectedRecipe,
+}) {
 	function handleRemoveReceta() {
 		removeReceta(receta.id);
 	}
@@ -318,7 +382,13 @@ function RecipeContainer({ receta, removeReceta, onSelectedRecipe }) {
 
 	return (
 		<li>
-			<div className="flex p-2 rounded-md bg-slate-100 hover:bg-cyan-50">
+			<div
+				className={`flex p-2 rounded-md ${
+					receta?.id === selectedRecipe?.id
+						? "bg-violet-50"
+						: "bg-slate-100"
+				} hover:bg-violet-50`}
+			>
 				<div className="w-1/4 overflow-hidden rounded cursor-pointer">
 					<img
 						src={receta.image}
@@ -330,12 +400,25 @@ function RecipeContainer({ receta, removeReceta, onSelectedRecipe }) {
 				<div className="flex justify-between w-3/4 gap-2 pl-2">
 					<div>
 						<p
-							className="font-bold cursor-pointer line-clamp-1 hover:text-indigo-500"
+							className="font-bold cursor-pointer hover:text-violet-500"
 							onClick={handleSelectedRecipe}
 						>
-							{receta.name}
+							{receta?.id === selectedRecipe?.id
+								? selectedRecipe.name
+									? selectedRecipe.name
+									: receta.name
+								: receta.name}
 						</p>
-						<p className="line-clamp-2">{receta.description}</p>
+						<p
+							className="cursor-pointer hover:text-violet-500"
+							onClick={handleSelectedRecipe}
+						>
+							{receta?.id === selectedRecipe?.id
+								? selectedRecipe.description
+									? selectedRecipe.description
+									: receta.description
+								: receta.description}
+						</p>
 					</div>
 					<div>
 						<button
@@ -352,15 +435,21 @@ function RecipeContainer({ receta, removeReceta, onSelectedRecipe }) {
 	);
 }
 
-function RecipeList({ recetas, removeReceta, onSelectedRecipe }) {
+function RecipeList({
+	recetasIniciales,
+	removeReceta,
+	onSelectedRecipe,
+	selectedRecipe,
+}) {
 	return (
 		<ul className="flex flex-col gap-2">
-			{recetas.map((receta) => (
+			{recetasIniciales.map((receta) => (
 				<RecipeContainer
 					receta={receta}
 					key={receta.id}
 					removeReceta={removeReceta}
 					onSelectedRecipe={onSelectedRecipe}
+					selectedRecipe={selectedRecipe}
 				/>
 			))}
 		</ul>
@@ -372,7 +461,35 @@ function RecetaContainer({
 	ingredientesActivos,
 	ingredienteAgregado,
 	onSetIngredienteAgreagado,
+	onHeaderSave,
 }) {
+	const [editMode, setEditMode] = useState(false);
+	const [recipeInstructions, setRecipeInstructions] = useState(
+		selectedRecipe?.instructions
+	);
+
+	function handleEditMode() {
+		setEditMode((editMode) => !editMode);
+		setRecipeInstructions(selectedRecipe?.instructions);
+	}
+
+	function handleSetSaved(e) {
+		e.preventDefault();
+
+		if (recipeInstructions) {
+			setRecipeInstructions(recipeInstructions);
+		}
+
+		const changedInstructions = {
+			...selectedRecipe,
+			instructions: recipeInstructions,
+		};
+
+		onHeaderSave(changedInstructions);
+
+		setEditMode((editMode) => !editMode);
+	}
+
 	function handleSeleccion(seleccionado) {
 		onSetIngredienteAgreagado((seleccion) => [...seleccion, seleccionado]);
 	}
@@ -388,111 +505,260 @@ function RecetaContainer({
 	console.log(
 		ingredientesActivos.map((ingrediente) => [
 			ingrediente.name,
+			ingrediente.quantity,
+			ingrediente.unit,
 			ingrediente.cost,
 		])
 	);
-	function calculator(ingredientesActivos) {
-		if (!ingredientesActivos) return;
+
+	function costCalculator(ingrediente) {
+		if (!ingrediente) return null;
+
+		const toCalculate = ingredientesActivos.filter(
+			(ing) => ing.name === ingrediente.name
+		);
+
+		console.log(toCalculate);
+
+		if (ingrediente.unit === "pz") {
+			return Number(
+				ingrediente.quantity *
+					(toCalculate[0].cost / toCalculate[0].quantity)
+			);
+		}
+		if (ingrediente.unit === "kg") {
+			return Number(
+				(ingrediente.quantity / toCalculate[0].quantity) *
+					(toCalculate[0].cost / ingrediente.quantity)
+			);
+		}
+		if (ingrediente.unit === "gr") {
+			return Number(
+				(ingrediente.quantity /
+					(toCalculate[0].unit === "kg"
+						? toCalculate[0].quantity * 1000
+						: toCalculate[0].quantity)) *
+					((toCalculate[0].cost / ingrediente.quantity) * 1000)
+			);
+		}
+		if (ingrediente.unit === "lt") {
+			return Number(
+				(ingrediente.quantity / toCalculate[0].quantity) *
+					toCalculate[0].cost
+			);
+		}
+		if (ingrediente.unit === "ml") {
+			return Number(
+				(ingrediente.quantity /
+					(toCalculate[0].unit === "lt"
+						? toCalculate[0].quantity * 1000
+						: toCalculate[0].quantity)) *
+					((toCalculate[0].cost / ingrediente.quantity) * 1000)
+			);
+		}
+	}
+
+	function calculator(ingrediente) {
+		if (!ingrediente) return;
+
+		const costosIngredientes = [
+			{
+				name: ingrediente.name,
+				cantidad: ingrediente.quantity,
+				cost: costCalculator(ingrediente),
+			},
+		];
+
+		return costosIngredientes;
 	}
 
 	return (
 		<div className="flex flex-col justify-between w-full h-full">
-			<HeaderReceta selectedRecipe={selectedRecipe} />
-
-			<div className="grid h-full grid-cols-1 gap-6 p-3 mt-4 bg-white rounded-md md:grid-cols-2">
-				<IngredientesContainer
-					ingredienteAgregado={ingredienteAgregado}
-					onRemoveSelected={handleRemoveSelected}
-					selectedRecipe={selectedRecipe}
-				/>
-				<div className="prose">
-					{selectedRecipe && (
-						<>
-							<div className="inline-flex items-baseline justify-between w-full gap-4">
-								<h2 className="mb-2 text-xl font-bold text-violet-950 line-clamp-1">
-									Instrucciones
-								</h2>
-								<button title="edit">✏️</button>
-							</div>
-							<div className="prose text-violet-900">
-								<p>{selectedRecipe.instructions}</p>
-							</div>
-						</>
-					)}
-				</div>
-			</div>
-
-			<FormaReceta
-				ingredientesActivos={ingredientesActivos}
-				onSeleccion={handleSeleccion}
+			<HeaderReceta
+				selectedRecipe={selectedRecipe}
+				onHeaderSave={onHeaderSave}
 			/>
+
+			{selectedRecipe && (
+				<>
+					<div className="grid h-full grid-cols-1 gap-6 p-3 mt-4 bg-white rounded-md md:grid-cols-2">
+						<IngredientesContainer
+							ingredienteAgregado={ingredienteAgregado}
+							onRemoveSelected={handleRemoveSelected}
+							selectedRecipe={selectedRecipe}
+							onCalculate={calculator}
+						/>
+						{selectedRecipe && (
+							<div>
+								<div className="prose">
+									{!editMode && (
+										<>
+											<div className="inline-flex items-baseline justify-between w-full gap-4">
+												<h2 className="mb-2 text-xl font-bold text-violet-950 line-clamp-1">
+													Instrucciones
+												</h2>
+												<button
+													onClick={handleEditMode}
+													title="edit"
+												>
+													✏️
+												</button>
+											</div>
+											<div className="prose text-violet-900">
+												<p>
+													{
+														selectedRecipe.instructions
+													}
+												</p>
+											</div>
+										</>
+									)}
+								</div>
+								{!editMode ? (
+									<></>
+								) : (
+									<div>
+										<form onSubmit={handleSetSaved}>
+											<div className="inline-flex items-baseline justify-between w-full gap-4">
+												<h2 className="mb-2 text-xl font-bold text-violet-950 line-clamp-1">
+													Editar Instrucciones
+												</h2>
+												<button title="Guardar">
+													💾
+												</button>
+											</div>
+											<textarea
+												rows="12"
+												className="w-full px-3 py-2 border rounded-lg text-violet-950 border-violet-100 bg-violet-50"
+												value={recipeInstructions}
+												onChange={(e) =>
+													setRecipeInstructions(
+														e.target.value
+													)
+												}
+											/>
+										</form>
+									</div>
+								)}
+							</div>
+						)}
+					</div>
+
+					<FormaReceta
+						ingredientesActivos={ingredientesActivos}
+						onSeleccion={handleSeleccion}
+					/>
+				</>
+			)}
 		</div>
 	);
 }
 
-function HeaderReceta({ selectedRecipe }) {
+function HeaderReceta({ selectedRecipe, onHeaderSave }) {
 	const [editMode, setEditMode] = useState(false);
-	const [saved, setSaved] = useState(false);
+	const [recipeName, setRecipeName] = useState(selectedRecipe?.name);
+	const [recipeDescription, setRecipeDescription] = useState(
+		selectedRecipe?.description
+	);
 
 	function handleSetEditMode() {
 		setEditMode((editMode) => !editMode);
+		setRecipeName(selectedRecipe.name);
+		setRecipeDescription(selectedRecipe.description);
 	}
 
-	function handleSetSaved() {
-		setSaved((saved) => !saved);
-		// setSaved
+	function handleSetSaved(e) {
+		e.preventDefault();
+
+		if (recipeName) {
+			setRecipeName(recipeName);
+		}
+
+		if (recipeDescription) {
+			setRecipeDescription(recipeDescription);
+		}
+
+		const changedRecipe = {
+			...selectedRecipe,
+			name: recipeName,
+			description: recipeDescription,
+		};
+
+		onHeaderSave(changedRecipe);
+
+		setEditMode((editMode) => !editMode);
 	}
 
 	return (
 		<>
-			<div className="flex items-center justify-between gap-4 p-4 bg-white rounded-md">
-				{selectedRecipe ? (
-					<>
-						<div>
-							<h2 className="text-xl font-bold text-violet-950">
-								{selectedRecipe.name}
-							</h2>
-							<p className="text-violet-900">
-								{selectedRecipe.description}
-							</p>
-						</div>
-						<div className="flex gap-3">
-							{!editMode && (
+			{selectedRecipe ? (
+				<>
+					{!editMode ? (
+						<div className="flex items-start justify-between gap-4 p-4 bg-white rounded-md">
+							<div>
+								<h2 className="text-xl font-bold text-violet-950">
+									{selectedRecipe.name}
+								</h2>
+								<p className="text-violet-900">
+									{selectedRecipe.description}
+								</p>
+							</div>
+							<div className="flex gap-3">
 								<button
 									onClick={handleSetEditMode}
 									title="Editar"
 								>
 									✏️
 								</button>
-							)}
-
-							{editMode && (
-								<>
-									<button
-										onClick={handleSetEditMode}
-										title="Guardar"
-									>
-										💾
-									</button>
-									<button title="Borrar">🗑</button>
-									<button
-										onClick={handleSetEditMode}
-										title="Cancelar"
-									>
-										⛔️
-									</button>
-								</>
-							)}
+							</div>
 						</div>
-					</>
-				) : (
-					<div>
-						<h2 className="text-xl font-bold text-violet-950">
-							Selecciona una receta primero
-						</h2>
-					</div>
-				)}
-			</div>
+					) : (
+						<>
+							<div className="flex items-start justify-between gap-4 p-4 bg-white rounded-md">
+								<form
+									onSubmit={handleSetSaved}
+									className="flex items-start justify-between w-full gap-4"
+								>
+									<div>
+										<input
+											type="text"
+											className="w-full px-3 py-2 mb-4 border rounded-lg text-violet-950 border-violet-100 bg-violet-50"
+											value={recipeName}
+											onChange={(e) =>
+												setRecipeName(e.target.value)
+											}
+										/>
+										<textarea
+											className="w-full px-3 py-2 border rounded-lg text-violet-950 border-violet-100 bg-violet-50"
+											value={recipeDescription}
+											onChange={(e) =>
+												setRecipeDescription(
+													e.target.value
+												)
+											}
+										/>
+									</div>
+									<button title="Guardar">💾</button>
+								</form>
+
+								{/* <button title="Borrar">🗑</button> */}
+								<button
+									onClick={handleSetEditMode}
+									title="Cancelar"
+								>
+									❌
+								</button>
+							</div>
+						</>
+					)}
+				</>
+			) : (
+				<div className="flex items-center justify-between h-full gap-4 p-4 bg-white rounded-md">
+					<h2 className="w-full text-xl font-bold text-center text-violet-950">
+						Selecciona una receta primero
+					</h2>
+				</div>
+			)}
 		</>
 	);
 }
@@ -622,36 +888,103 @@ function IngredientesContainer({
 	ingredienteAgregado,
 	onRemoveSelected,
 	selectedRecipe,
+	onCalculate,
 }) {
+	function handleCalculation(ingredientesAgregados) {
+		if (!ingredientesAgregados) return;
+
+		const ingCalculados = ingredientesAgregados.map((ingrediente) =>
+			onCalculate(ingrediente)
+		);
+
+		return ingCalculados;
+		// console.log(ingCalculado);
+	}
+
 	return (
-		<div>
-			{ingredienteAgregado.length ? (
-				<>
-					<h2 className="mb-2 text-xl font-bold text-violet-950">
-						Ingredientes {selectedRecipe?.name}
-					</h2>
-					<div className="flex flex-col gap-1">
-						{ingredienteAgregado.map((ingredienteNuevo, index) => (
-							<IngredienteReceta
-								ingredienteNuevo={ingredienteNuevo}
-								key={index}
-								onRemoveSelected={onRemoveSelected}
-							/>
-						))}
-					</div>
-				</>
-			) : (
-				<>
-					<div className="flex items-center gap-4">
-						<div className="animate-bounce">👇</div>
-						<h2 className="text-xl font-bold text-violet-950">
-							Selecciona los ingredientes
-						</h2>
-						<div className="animate-bounce">👇</div>
-					</div>
-				</>
+		<>
+			{selectedRecipe && (
+				<div>
+					{ingredienteAgregado.length ? (
+						<>
+							<h2 className="mb-2 text-xl font-bold text-violet-950">
+								Ingredientes {selectedRecipe?.name}
+							</h2>
+							<div className="flex flex-col gap-1">
+								{ingredienteAgregado.map(
+									(ingredienteNuevo, index) => (
+										<IngredienteReceta
+											ingredienteNuevo={ingredienteNuevo}
+											key={index}
+											onRemoveSelected={onRemoveSelected}
+										/>
+									)
+								)}
+							</div>
+							{onCalculate && (
+								<div className="mt-5">
+									<h2 className="mb-2 text-xl font-bold text-violet-950">
+										Costos {selectedRecipe?.name}
+									</h2>
+									<div>
+										{handleCalculation(
+											ingredienteAgregado
+										) && (
+											<>
+												<table className="w-full border border-collapse shadow-sm table-auto border-violet-100 text-violet-950">
+													<thead className="bg-violet-100">
+														<tr>
+															<th className="p-1 text-left border border-violet-100">
+																Ingrediente
+															</th>
+															<th className="p-1 text-left border border-violet-100">
+																Costo
+															</th>
+														</tr>
+													</thead>
+													<tbody>
+														{handleCalculation(
+															ingredienteAgregado
+														).map((ingrediente) => (
+															<tr>
+																<td className="p-1 border border-violet-100">
+																	{
+																		ingrediente[0]
+																			.name
+																	}
+																</td>
+																<td className="p-1 border border-violet-100">
+																	{" $"}
+																	{Math.round(
+																		ingrediente[0]
+																			.cost *
+																			100
+																	) / 100}
+																</td>
+															</tr>
+														))}
+													</tbody>
+												</table>
+											</>
+										)}
+									</div>
+								</div>
+							)}
+						</>
+					) : (
+						<>
+							<div className="flex items-center gap-4">
+								<div className="animate-bounce">👇</div>
+								<h2 className="text-xl font-bold text-violet-950">
+									Selecciona los ingredientes
+								</h2>
+								<div className="animate-bounce">👇</div>
+							</div>
+						</>
+					)}
+				</div>
 			)}
-		</div>
+		</>
 	);
 }
 
@@ -717,8 +1050,12 @@ function ListaIngredientesCostos({ ingredientesActivos }) {
 		<table className="w-full border border-collapse border-pink-200 shadow-sm table-auto">
 			<thead className="bg-pink-200">
 				<tr>
-					<th className="p-3 border border-pink-200">Nombre</th>
-					<th className="p-3 border border-pink-200">Costo</th>
+					<th className="p-3 text-left border border-pink-200">
+						Nombre
+					</th>
+					<th className="p-3 text-left border border-pink-200">
+						Costo
+					</th>
 					<th className="p-3 border border-pink-200 w-44">⚙</th>
 				</tr>
 			</thead>
@@ -737,13 +1074,13 @@ function ListaIngredientesCostos({ ingredientesActivos }) {
 function IngredienteCosto({ ingrediente }) {
 	return (
 		<tr className="odd:bg-pink-100">
-			<td className="p-3">{ingrediente.name}</td>
-			<td className="p-3">
+			<td className="p-3 border border-pink-200">{ingrediente.name}</td>
+			<td className="p-3 border border-pink-200">
 				{ingrediente.quantity} {ingrediente.unit} / ${ingrediente.cost}{" "}
 				mxn
 			</td>
 
-			<td className="p-3">
+			<td className="p-3 border border-pink-200">
 				<div className="flex justify-center gap-4">
 					<button title="Editar">✏️</button>
 					<button title="Borrar">🗑</button>
