@@ -500,25 +500,12 @@ function RecetaContainer({
 		);
 	}
 
-	console.log(ingredientesActivos);
-
-	console.log(
-		ingredientesActivos.map((ingrediente) => [
-			ingrediente.name,
-			ingrediente.quantity,
-			ingrediente.unit,
-			ingrediente.cost,
-		])
-	);
-
 	function costCalculator(ingrediente) {
 		if (!ingrediente) return null;
 
 		const toCalculate = ingredientesActivos.filter(
 			(ing) => ing.name === ingrediente.name
 		);
-
-		console.log(toCalculate);
 
 		if (ingrediente.unit === "pz") {
 			return Number(
@@ -561,14 +548,11 @@ function RecetaContainer({
 	function calculator(ingrediente) {
 		if (!ingrediente) return;
 
-		const costosIngredientes = [
-			{
-				name: ingrediente.name,
-				cantidad: ingrediente.quantity,
-				cost: costCalculator(ingrediente),
-			},
-		];
-
+		const costosIngredientes = {
+			name: ingrediente.name,
+			cantidad: ingrediente.quantity,
+			cost: costCalculator(ingrediente),
+		};
 		return costosIngredientes;
 	}
 
@@ -890,6 +874,8 @@ function IngredientesContainer({
 	selectedRecipe,
 	onCalculate,
 }) {
+	const [costos, setCostos] = useState(0);
+
 	function handleCalculation(ingredientesAgregados) {
 		if (!ingredientesAgregados) return;
 
@@ -897,8 +883,16 @@ function IngredientesContainer({
 			onCalculate(ingrediente)
 		);
 
+		// ingCalculados.map((ingrediente) => handleCostSum(ingrediente.cost));
+		const sumados = ingCalculados.map((ingrediente) => ingrediente.cost);
+		console.log(sumados);
+		if (sumados.length) {
+			const sum = sumados.reduce((partialSum, a) => partialSum + a, 0);
+			console.log(sum);
+			setCostos(sum);
+		}
+
 		return ingCalculados;
-		// console.log(ingCalculado);
 	}
 
 	return (
@@ -945,25 +939,38 @@ function IngredientesContainer({
 													<tbody>
 														{handleCalculation(
 															ingredienteAgregado
-														).map((ingrediente) => (
+														).map(
+															(
+																ingrediente,
+																index
+															) => (
+																<tr key={index}>
+																	<td className="p-1 border border-violet-100">
+																		{
+																			ingrediente.name
+																		}
+																	</td>
+																	<td className="p-1 border border-violet-100">
+																		{" $"}
+																		{Math.round(
+																			ingrediente.cost *
+																				100
+																		) / 100}
+																	</td>
+																</tr>
+															)
+														)}
+													</tbody>
+													{costos !== 0 && (
+														<tfoot>
 															<tr>
-																<td className="p-1 border border-violet-100">
-																	{
-																		ingrediente[0]
-																			.name
-																	}
-																</td>
-																<td className="p-1 border border-violet-100">
-																	{" $"}
-																	{Math.round(
-																		ingrediente[0]
-																			.cost *
-																			100
-																	) / 100}
+																<td></td>
+																<td>
+																	{costos}
 																</td>
 															</tr>
-														))}
-													</tbody>
+														</tfoot>
+													)}
 												</table>
 											</>
 										)}
