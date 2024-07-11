@@ -7,7 +7,6 @@ export function IngredientesContainer({
 	selectedRecipe,
 	costos,
 	ingredientesCalculados,
-	ingredientesActivos,
 }) {
 	return (
 		<>

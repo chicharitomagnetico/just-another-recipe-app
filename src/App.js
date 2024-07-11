@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "./App.css";
 import { Logo } from "./Logo";
 import { Sidebar } from "./Sidebar";
@@ -153,10 +153,6 @@ function App() {
 	const [recetasIniciales, setRecetasIniciales] = useState(initialRecetas);
 	const [ingCalculados, setIngCalculados] = useState([]);
 	const [costos, setCostos] = useState(0);
-
-	useEffect(() => {
-		handleCalculation(selectedRecipe);
-	}, [ingredientesActivos]);
 
 	function handleCalculation(receta) {
 		if (!receta) return;
