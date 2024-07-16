@@ -9,7 +9,6 @@ export function Sidebar({
 	onSetRecetas,
 	onBorrarReceta,
 	selectedRecipe,
-	onHandleCalculation,
 }) {
 	const [agregarReceta, setAgregarReceta] = useState(false);
 
@@ -38,7 +37,6 @@ export function Sidebar({
 						removeReceta={handleBorrarReceta}
 						onSelectedRecipe={onSelectedRecipe}
 						selectedRecipe={selectedRecipe}
-						onHandleCalculation={onHandleCalculation}
 					/>
 				</div>
 			</div>

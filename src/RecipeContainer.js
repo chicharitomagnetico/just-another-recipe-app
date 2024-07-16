@@ -3,7 +3,6 @@ export function RecipeContainer({
 	removeReceta,
 	onSelectedRecipe,
 	selectedRecipe,
-	onHandleCalculation,
 }) {
 	function handleRemoveReceta() {
 		removeReceta(receta.id);
@@ -11,7 +10,6 @@ export function RecipeContainer({
 
 	function handleSelectedRecipe() {
 		onSelectedRecipe(receta);
-		onHandleCalculation(receta);
 	}
 
 	return (

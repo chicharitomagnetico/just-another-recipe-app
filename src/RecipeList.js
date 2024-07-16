@@ -5,7 +5,6 @@ export function RecipeList({
 	removeReceta,
 	onSelectedRecipe,
 	selectedRecipe,
-	onHandleCalculation,
 }) {
 	return (
 		<ul className="flex flex-col gap-2">
@@ -16,7 +15,6 @@ export function RecipeList({
 					removeReceta={removeReceta}
 					onSelectedRecipe={onSelectedRecipe}
 					selectedRecipe={selectedRecipe}
-					onHandleCalculation={onHandleCalculation}
 				/>
 			))}
 		</ul>

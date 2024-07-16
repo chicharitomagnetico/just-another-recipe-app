@@ -1,5 +1,5 @@
 import { IngredienteReceta } from "./IngredienteReceta";
-import { CostosTable } from "./CostosTable";
+import { TablaCostosCalculados } from "./TablaCostosCalculados";
 
 export function IngredientesContainer({
 	ingredientesAgregados,
@@ -7,81 +7,58 @@ export function IngredientesContainer({
 	selectedRecipe,
 	costos,
 	ingredientesCalculados,
+	onEditIngredientesAg,
 }) {
 	return (
 		<>
 			{selectedRecipe && (
 				<div>
-					{ingredientesAgregados.length ? (
-						<>
-							<h2 className="mb-2 text-xl font-bold text-violet-950">
-								Ingredientes {selectedRecipe?.name}
-							</h2>
-							<div className="flex flex-col gap-1">
-								{ingredientesAgregados.map(
-									(ingredienteNuevo, index) => (
-										<IngredienteReceta
-											ingredienteNuevo={ingredienteNuevo}
-											key={index}
-											onRemoveSelected={onRemoveSelected}
-										/>
-									)
-								)}
-							</div>
-							{ingredientesCalculados.length > 0 && (
-								<div className="mt-5">
-									<h2 className="mb-2 text-xl font-bold text-violet-950">
-										Costos {selectedRecipe?.name}
-									</h2>
-									<div>
-										<>
-											<table className="w-full border border-collapse shadow-sm table-auto border-violet-100 text-violet-950">
-												<thead className="bg-violet-100">
-													<tr>
-														<th className="p-1 text-left border border-violet-100">
-															Ingrediente
-														</th>
-														<th className="p-1 text-left border border-violet-100">
-															Costo
-														</th>
-													</tr>
-												</thead>
-												<tbody>
-													{ingredientesCalculados.map(
-														(
-															ingrediente,
-															index
-														) => (
-															<CostosTable
-																key={index}
-																ingrediente={
-																	ingrediente
-																}
-															/>
-														)
-													)}
-												</tbody>
-												{costos !== 0 && (
-													<tfoot className="bg-violet-100">
-														<tr>
-															<td className="p-1 font-bold border border-violet-100">
-																Total
-															</td>
-															<td className="p-1 font-bold border border-violet-100">
-																$
-																{Math.round(
-																	costos * 100
-																) / 100}
-															</td>
-														</tr>
-													</tfoot>
-												)}
-											</table>
-										</>
-									</div>
+					{ingredientesAgregados?.length > 0 ? (
+						(console.log(ingredientesAgregados),
+						(
+							<>
+								<h2 className="mb-2 text-xl font-bold text-violet-950">
+									Ingredientes {selectedRecipe?.name}
+								</h2>
+								<div className="flex flex-col gap-1">
+									{ingredientesAgregados.map(
+										(ingredienteNuevo, index) => (
+											<IngredienteReceta
+												ingredienteNuevo={
+													ingredienteNuevo
+												}
+												key={index}
+												selectedRecipe={selectedRecipe}
+												onRemoveSelected={
+													onRemoveSelected
+												}
+												onEditIngredientesAg={
+													onEditIngredientesAg
+												}
+												ingredientesAgregados={
+													ingredientesAgregados
+												}
+											/>
+										)
+									)}
 								</div>
-							)}
-						</>
+								{ingredientesCalculados.length > 0 && (
+									<div className="mt-5">
+										<h2 className="mb-2 text-xl font-bold text-violet-950">
+											Costos {selectedRecipe?.name}
+										</h2>
+										<div>
+											<TablaCostosCalculados
+												costos={costos}
+												ingredientesCalculados={
+													ingredientesCalculados
+												}
+											/>
+										</div>
+									</div>
+								)}
+							</>
+						))
 					) : (
 						<>
 							<div className="flex items-center gap-4">

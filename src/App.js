@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { Logo } from "./Logo";
 import { Sidebar } from "./Sidebar";
@@ -145,34 +145,54 @@ const initialRecetas = [
 	},
 ];
 
+function getInitialIngredients() {
+	return initialIngredients;
+}
+let ingredientesIniciales = getInitialIngredients();
+
 function App() {
 	const [selectedRecipe, setSelectedRecipe] = useState(null);
-	const [ingredientesActivos, setIngredientesActivos] =
-		useState(initialIngredients);
+	const [ingredientesActivos, setIngredientesActivos] = useState(
+		ingredientesIniciales
+	);
 	const [ingredientesAgregados, setIngredientesAgregados] = useState([]);
 	const [recetasIniciales, setRecetasIniciales] = useState(initialRecetas);
 	const [ingCalculados, setIngCalculados] = useState([]);
 	const [costos, setCostos] = useState(0);
 
+	// useEffect(() => {
+	// 	console.log(ingredientesAgregados);
+	// }, [ingredientesAgregados]);
+
 	function handleCalculation(receta) {
 		if (!receta) return;
 		// Get receta ingredients
-		let recetaIngredients = receta.ingredients;
-		if (ingredientesAgregados.length > 0) {
-			// Add ingredients to the receta, setIngredienteAgregados is already set.
-			recetaIngredients = [
-				...recetaIngredients,
-				...ingredientesAgregados,
-			];
-		}
+		const recetaIngredients = receta.ingredients;
+		// if (ingredientesAgregados.length > 0) {
+		// 	// Add ingredients to the receta, setIngredienteAgregados is already set.
+		// 	recetaIngredients = [
+		// 		...recetaIngredients,
+		// 		...ingredientesAgregados,
+		// 	];
+		// }
 
-		const toCalculate = recetaIngredients.map((ingrediente) => {
+		const toCalculate = handleToCalculate(recetaIngredients);
+
+		setIngCalculados(toCalculate);
+
+		handleTotalCosts(toCalculate);
+	}
+
+	function handleToCalculate(ingredientes) {
+		const toCalculate = ingredientes.map((ingrediente) => {
 			const cost = costCalculator(ingrediente);
 			return { ...ingrediente, cost };
 		});
 
-		setIngCalculados(toCalculate);
+		return toCalculate;
+	}
 
+	function handleTotalCosts(toCalculate) {
 		const totalCost = toCalculate.reduce(
 			(acc, ingrediente) => acc + ingrediente.cost,
 			0
@@ -275,19 +295,26 @@ function App() {
 			...recetasIniciales,
 			receta,
 		]);
+
+		setSelectedRecipe(receta);
 	}
 
 	function handleBorrarReceta(recetaBorrarId) {
 		setRecetasIniciales((recetas) =>
 			recetas.filter((receta) => receta.id !== recetaBorrarId)
 		);
+		setSelectedRecipe(null);
 	}
 
+	// Runs when a recipe from the sidebar is selected.
 	function handleSelectedRecipe(receta) {
 		if (!receta) {
 			return;
 		}
-		setSelectedRecipe(null);
+
+		// // Remove selected recipe from the Receta view
+		// setSelectedRecipe({ ...receta });
+		// // Remove all ingredients from the Receta view
 		setIngredientesAgregados([]);
 
 		setSelectedRecipe(receta);
@@ -306,17 +333,102 @@ function App() {
 	}
 
 	function handleOnSetIngredientesAgregados(ingrediente) {
-		setIngredientesAgregados((seleccionado) => [
-			...seleccionado,
-			ingrediente,
-		]);
+		if (!ingrediente) return;
+
+		// Check if ingrediente is already in the ingredientesAgregados list
+		const exists = ingredientesAgregados.find(
+			(ing) => ing.id === ingrediente.id
+		);
+
+		if (exists) {
+			// Update the ingredient in the list of ingredientesAgregados
+			const updatedIngredientesAgregados = ingredientesAgregados.map(
+				(ing) =>
+					ing.id === ingrediente.id
+						? {
+								...ing,
+								quantity: ing.quantity + ingrediente.quantity,
+						  }
+						: ing
+			);
+			if (!updatedIngredientesAgregados) return;
+			// Update ingredientesAgregados with updatedIngredientesAgregados
+			setIngredientesAgregados(updatedIngredientesAgregados);
+
+			const toCalculate = handleToCalculate(updatedIngredientesAgregados);
+
+			setIngCalculados(toCalculate);
+
+			handleTotalCosts(toCalculate);
+		} else {
+			setIngredientesAgregados((ingredientesExistentes) => [
+				...ingredientesExistentes,
+				ingrediente,
+			]);
+		}
 	}
 
-	function handleOnSetIngredientesActivos(ingrediente) {
-		// setIngredientesActivos((activos) => [
-		// 	...activos,
-		// 	ingrediente,
-		// ]);
+	function handleOnEditIngredientesAgregados(
+		ingredienteEditado,
+		selectedRecipe
+	) {
+		console.log(ingredienteEditado);
+		// Update the ingredient in the list of selectedRecipe ingredients
+		selectedRecipe.ingredients = selectedRecipe.ingredients.map(
+			(ingrediente) =>
+				ingrediente.id === ingredienteEditado.id
+					? ingredienteEditado
+					: ingrediente
+		);
+
+		const editedIngredients = selectedRecipe.ingredients;
+
+		const toCalculate = handleToCalculate(editedIngredients);
+
+		setIngCalculados(toCalculate);
+
+		handleTotalCosts(toCalculate);
+
+		setIngredientesAgregados(editedIngredients);
+	}
+
+	// When an ingredient is removed from the list of ingredienteAgregados (selectedRecipe.ingredients)
+	function handleOnRemoveIngredientesAgregados(
+		ingredienteBorrado,
+		selectedRecipe
+	) {
+		// Erase ingredienteBorrado from ingredientesAgreagados
+		selectedRecipe.ingredients = selectedRecipe.ingredients.filter(
+			(ingrediente) => ingrediente.id !== ingredienteBorrado
+		);
+
+		setSelectedRecipe(selectedRecipe);
+
+		const selectedAgregados = selectedRecipe.ingredients;
+
+		const toCalculate = handleToCalculate(selectedAgregados);
+
+		setIngCalculados(toCalculate);
+
+		handleTotalCosts(toCalculate);
+
+		setIngredientesAgregados(selectedAgregados);
+	}
+
+	function handleOnSetIngredientesActivos(ingredientes) {
+		ingredientesIniciales = ingredientes;
+
+		setIngredientesActivos(ingredientes);
+
+		// handleCalculation(selectedRecipe);
+		const toCalculate = ingredientes.map((ingrediente) => {
+			const cost = costCalculator(ingrediente);
+			return { ...ingrediente, cost };
+		});
+
+		setIngCalculados(toCalculate);
+
+		handleTotalCosts(toCalculate);
 	}
 
 	return (
@@ -330,7 +442,6 @@ function App() {
 						onSetRecetas={handleAddReceta}
 						onBorrarReceta={handleBorrarReceta}
 						selectedRecipe={selectedRecipe}
-						onHandleCalculation={handleCalculation}
 					/>
 				</div>
 				<div className="col-span-3 p-3 rounded-md bg-violet-200">
@@ -339,17 +450,24 @@ function App() {
 						onSetIngredientesAgreagados={
 							handleOnSetIngredientesAgregados
 						}
+						onEditIngredientesAgregados={
+							handleOnEditIngredientesAgregados
+						}
+						onRemoveIngredientesAgregados={
+							handleOnRemoveIngredientesAgregados
+						}
 						selectedRecipe={selectedRecipe}
 						ingredientesActivos={ingredientesActivos}
 						onHeaderSave={handleOnSaveHeader}
 						costos={costos}
 						ingredientesCalculados={ingCalculados}
+						onHandleCalculation={handleCalculation}
 					/>
 				</div>
 			</div>
 			<AgregaIngredientes
 				ingredientesActivos={ingredientesActivos}
-				onSetIngredientesActivos={setIngredientesActivos}
+				onSetIngredientesActivos={handleOnSetIngredientesActivos}
 			/>
 		</div>
 	);

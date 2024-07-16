@@ -7,6 +7,8 @@ export function RecetaContainer({
 	selectedRecipe,
 	ingredientesAgregados,
 	onSetIngredientesAgreagados,
+	onEditIngredientesAgregados,
+	onRemoveIngredientesAgregados,
 	ingredientesActivos,
 	onHeaderSave,
 	costos,
@@ -39,15 +41,21 @@ export function RecetaContainer({
 		setEditMode((editMode) => !editMode);
 	}
 
+	// Add a new ingredient to the list of selectedRecipe ingredients
 	function handleSeleccion(seleccionado, selectedRecipe) {
-		console.log(selectedRecipe);
 		onSetIngredientesAgreagados(seleccionado, selectedRecipe);
 	}
 
-	function handleRemoveSelected(borrado) {
-		onSetIngredientesAgreagados(
-			ingredientesAgregados.filter((sel) => sel.id !== borrado)
-		);
+	function handleRemoveSelected(borrado, selectedRecipe) {
+		// Borrado is the ID of the ingredient to remove
+		onRemoveIngredientesAgregados(borrado, selectedRecipe);
+	}
+
+	function handleEditIngredientesAgregados(
+		ingredienteEditado,
+		selectedRecipe
+	) {
+		onEditIngredientesAgregados(ingredienteEditado, selectedRecipe);
 	}
 
 	return (
@@ -67,6 +75,9 @@ export function RecetaContainer({
 							costos={costos}
 							ingredientesCalculados={ingredientesCalculados}
 							ingredientesActivos={ingredientesActivos}
+							onEditIngredientesAg={
+								handleEditIngredientesAgregados
+							}
 						/>
 						{selectedRecipe && (
 							<div>
